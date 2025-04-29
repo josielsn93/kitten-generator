@@ -6,7 +6,7 @@ import Animated, {
     withTiming, Easing
 } from 'react-native-reanimated';
 
-const fetchKittenImage = async (): Promise<string> => {
+const fetchKittenImage = async (): Promise<string | null> => {
     try {
         const response = await fetch('https://api.thecatapi.com/v1/images/search?mime_types=jpg,png&category_ids=5');
         if (!response.ok) {
@@ -16,20 +16,24 @@ const fetchKittenImage = async (): Promise<string> => {
         if (data && data.length > 0 && data[0].url) {
             return data[0].url;
         }
-        throw new Error('Nenhuma imagem encontrada');
+        // Nenhuma imagem encontrada ou URL inválida
+        return null;
     } catch (error) {
         console.error('Erro ao buscar imagem de gatinho:', error);
-        return '';
+        // Em caso de erro, retorna null
+        return null;
     }
 };
+
 const LoadingScreen = ({ isLoading }: { isLoading: boolean }) => {
   const rotation = useSharedValue(0);
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ rotate: `${rotation.value}deg` }],
   }));
- 
+
   useEffect(() => {
     if(isLoading){
+        // Animação contínua enquanto carrega
         rotation.value = withTiming(360, { duration: 3000, easing: Easing.linear });
     } else {
         rotation.value = 0;
@@ -38,7 +42,8 @@ const LoadingScreen = ({ isLoading }: { isLoading: boolean }) => {
 
   return (
     <View style={styles.loadingContainer}>
-      <Animated.Image source={require('./assets/images/dog.png')} style={[styles.dogHead, animatedStyle]} />
+      {/* Usando imagem de gatinho na tela de carregamento */}
+      <Animated.Image source={require('./assets/images/kittens/kitten1.png')} style={[styles.dogHead, animatedStyle]} />
     </View>
   );
 };
@@ -70,12 +75,13 @@ const MainContent = (): JSX.Element => {
   const generatePet = (): void => {
         fetchKittenImage().then(url => setKitten(url));
 };
-  
+
   return (
     <View style={styles.mainContainer}>
       <Text style={styles.welcomeText}>Gerador de Bichinhos Aleatório</Text>
+      {/* Exibe a imagem apenas se houver uma URL válida */}
       {kitten && (
-        <Image source={kitten} style={styles.kittenImage} />
+        <Image source={{ uri: kitten }} style={styles.kittenImage} />
        )}
             <Animated.View style={[styles.buttonContainer, animatedButton]}>
                 <TouchableOpacity
@@ -147,19 +153,19 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#007bff',
     paddingVertical: 10,
-    paddingHorizontal: 20, 
+    paddingHorizontal: 20,
     borderRadius: 5,
     alignItems: 'center',
-    justifyContent: 'center', 
+    justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
     elevation: 5,
-  }, 
-  buttonText: { 
-    color: '#fff', 
-    fontSize: 16 
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16
   },
   kittenImage: {
     width: 200, height: 200, marginTop: 20,
